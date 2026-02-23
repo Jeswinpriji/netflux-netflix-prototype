@@ -1,0 +1,687 @@
+import { useState, useRef, useEffect, useCallback } from "react";
+
+// ─── Data ───────────────────────────────────────────────────────────────────
+const MOVIES = [
+  {
+    id: 1,
+    title: "Cosmic Drift",
+    genre: "Sci-Fi · 2024",
+    rating: "TV-MA",
+    match: "97%",
+    desc: "A lone astronaut drifts through a collapsing universe searching for the last habitable planet.",
+    cover: "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=400&h=600&fit=crop",
+    preview: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+    color: "#1a0533",
+  },
+  {
+    id: 2,
+    title: "Neon Tokyo",
+    genre: "Thriller · 2023",
+    rating: "TV-14",
+    match: "94%",
+    desc: "In the rain-soaked streets of 2089 Tokyo, a detective unravels a conspiracy that spans centuries.",
+    cover: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=400&h=600&fit=crop",
+    preview: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+    color: "#001a33",
+  },
+  {
+    id: 3,
+    title: "The Last Forest",
+    genre: "Drama · 2024",
+    rating: "PG-13",
+    match: "91%",
+    desc: "A family fights to protect the only remaining old-growth forest from a relentless corporation.",
+    cover: "https://images.unsplash.com/photo-1448375240586-882707db888b?w=400&h=600&fit=crop",
+    preview: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+    color: "#001a0a",
+  },
+  {
+    id: 4,
+    title: "Crimson Tide",
+    genre: "Action · 2024",
+    rating: "R",
+    match: "88%",
+    desc: "An elite navy commander must defuse a mutiny while racing against a rogue nuclear threat.",
+    cover: "https://images.unsplash.com/photo-1502481851512-e9e2529bfbf9?w=400&h=600&fit=crop",
+    preview: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+    color: "#1a0a00",
+  },
+  {
+    id: 5,
+    title: "Ghost Signal",
+    genre: "Horror · 2023",
+    rating: "TV-MA",
+    match: "85%",
+    desc: "A radio operator receives transmissions from a dimension where the dead still broadcast.",
+    cover: "https://images.unsplash.com/photo-1478760329108-5c3ed9d495a0?w=400&h=600&fit=crop",
+    preview: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
+    color: "#0a001a",
+  },
+  {
+    id: 6,
+    title: "Solar Queens",
+    genre: "Adventure · 2024",
+    rating: "PG",
+    match: "96%",
+    desc: "Three sisters inherit a crumbling solar empire and must race to restore power to a dying Earth.",
+    cover: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=600&fit=crop",
+    preview: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4",
+    color: "#1a1000",
+  },
+  {
+    id: 7,
+    title: "Deep State",
+    genre: "Spy · 2023",
+    rating: "TV-MA",
+    match: "92%",
+    desc: "A whistleblower exposes a shadow government, only to discover she's part of their darkest secret.",
+    cover: "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=400&h=600&fit=crop",
+    preview: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
+    color: "#001033",
+  },
+  {
+    id: 8,
+    title: "Fracture",
+    genre: "Psychological · 2024",
+    rating: "R",
+    match: "89%",
+    desc: "A therapist realizes her newest patient shares memories she has never told anyone.",
+    cover: "https://images.unsplash.com/photo-1509023464722-18d996393ca8?w=400&h=600&fit=crop",
+    preview: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/VolkswagenGTIReview.mp4",
+    color: "#1a001a",
+  },
+  {
+    id: 9,
+    title: "Ember",
+    genre: "Romance · 2024",
+    rating: "TV-14",
+    match: "93%",
+    desc: "Two strangers find each other on the last train before a city is evacuated forever.",
+    cover: "https://images.unsplash.com/photo-1518105779142-d975f22f1b0a?w=400&h=600&fit=crop",
+    preview: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4",
+    color: "#1a0808",
+  },
+];
+
+// ─── Movie Card ──────────────────────────────────────────────────────────────
+function MovieCard({ movie, onHover, onLeave, onPlay, isHovered }) {
+  return (
+    <div
+      onMouseEnter={() => onHover(movie)}
+      onMouseLeave={onLeave}
+      onClick={() => onPlay(movie)}
+      style={{
+        position: "relative",
+        borderRadius: "8px",
+        overflow: "hidden",
+        cursor: "pointer",
+        transform: isHovered ? "scale(1.06) translateY(-6px)" : "scale(1)",
+        transition: "transform 0.35s cubic-bezier(.4,0,.2,1), box-shadow 0.35s",
+        boxShadow: isHovered
+          ? "0 24px 60px rgba(0,0,0,.85), 0 0 0 2px #e50914"
+          : "0 4px 20px rgba(0,0,0,.5)",
+        zIndex: isHovered ? 10 : 1,
+        aspectRatio: "2/3",
+        background: "#111",
+      }}
+    >
+      <img
+        src={movie.cover}
+        alt={movie.title}
+        style={{
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          display: "block",
+          transition: "opacity 0.3s",
+          opacity: isHovered ? 0.6 : 1,
+        }}
+      />
+      {/* Gradient overlay */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: isHovered
+            ? "linear-gradient(to top, rgba(0,0,0,.95) 40%, transparent 80%)"
+            : "linear-gradient(to top, rgba(0,0,0,.7) 20%, transparent 60%)",
+          transition: "background 0.3s",
+        }}
+      />
+      {/* Title always visible */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: isHovered ? "20px 14px 14px" : "10px 10px 8px",
+          transition: "padding 0.3s",
+        }}
+      >
+        <div
+          style={{
+            fontFamily: "'Bebas Neue', 'Impact', sans-serif",
+            fontSize: isHovered ? "1.15rem" : "0.9rem",
+            color: "#fff",
+            letterSpacing: "0.05em",
+            marginBottom: isHovered ? "6px" : 0,
+            transition: "font-size 0.3s, margin 0.3s",
+          }}
+        >
+          {movie.title}
+        </div>
+        {isHovered && (
+          <div style={{ animation: "fadeUp 0.25s ease" }}>
+            <div
+              style={{
+                display: "flex",
+                gap: "8px",
+                alignItems: "center",
+                marginBottom: "6px",
+              }}
+            >
+              <span style={{ color: "#46d369", fontSize: "0.72rem", fontWeight: 700 }}>
+                {movie.match} Match
+              </span>
+              <span
+                style={{
+                  color: "#ccc",
+                  fontSize: "0.65rem",
+                  border: "1px solid #999",
+                  padding: "0 4px",
+                  borderRadius: "2px",
+                }}
+              >
+                {movie.rating}
+              </span>
+              <span style={{ color: "#aaa", fontSize: "0.68rem" }}>{movie.genre}</span>
+            </div>
+            <p
+              style={{
+                color: "#ddd",
+                fontSize: "0.7rem",
+                lineHeight: 1.4,
+                margin: 0,
+                display: "-webkit-box",
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: "vertical",
+                overflow: "hidden",
+              }}
+            >
+              {movie.desc}
+            </p>
+            <div style={{ marginTop: "10px", display: "flex", gap: "8px" }}>
+              <button
+                onClick={(e) => { e.stopPropagation(); onPlay(movie); }}
+                style={{
+                  background: "#fff",
+                  color: "#000",
+                  border: "none",
+                  borderRadius: "4px",
+                  padding: "5px 14px",
+                  fontSize: "0.75rem",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "4px",
+                }}
+              >
+                ▶ Play
+              </button>
+              <button
+                style={{
+                  background: "rgba(255,255,255,0.15)",
+                  color: "#fff",
+                  border: "1px solid rgba(255,255,255,0.4)",
+                  borderRadius: "50%",
+                  width: "28px",
+                  height: "28px",
+                  fontSize: "0.75rem",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                +
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Background Preview ──────────────────────────────────────────────────────
+function BackgroundPreview({ movie }) {
+  const videoRef = useRef(null);
+
+  useEffect(() => {
+    if (!videoRef.current || !movie) return;
+    videoRef.current.load();
+    videoRef.current.play().catch(() => {});
+  }, [movie]);
+
+  if (!movie) return null;
+
+  return (
+    <div
+      key={movie.id}
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 0,
+        animation: "bgFadeIn 0.5s ease",
+      }}
+    >
+      <video
+        ref={videoRef}
+        src={movie.preview}
+        muted
+        loop
+        playsInline
+        style={{
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          opacity: 0.25,
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: `linear-gradient(to right, ${movie.color}ee 0%, transparent 60%), linear-gradient(to top, #000 0%, transparent 50%)`,
+        }}
+      />
+    </div>
+  );
+}
+
+// ─── Player Page ─────────────────────────────────────────────────────────────
+function PlayerPage({ movie, onBack }) {
+  const videoRef = useRef(null);
+  const [showBack, setShowBack] = useState(false);
+  const timerRef = useRef(null);
+
+  const handleMouseMove = useCallback(() => {
+    setShowBack(true);
+    clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => setShowBack(false), 3000);
+  }, []);
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.play().catch(() => {});
+    }
+    return () => clearTimeout(timerRef.current);
+  }, []);
+
+  return (
+    <div
+      onMouseMove={handleMouseMove}
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "#000",
+        zIndex: 1000,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <video
+        ref={videoRef}
+        src={movie.preview}
+        controls
+        autoPlay
+        playsInline
+        style={{ width: "100%", height: "100%", objectFit: "contain" }}
+      />
+
+      {/* Back button */}
+      <button
+        onClick={onBack}
+        style={{
+          position: "fixed",
+          top: "20px",
+          left: "20px",
+          background: "rgba(0,0,0,0.55)",
+          backdropFilter: "blur(8px)",
+          border: "1px solid rgba(255,255,255,0.25)",
+          borderRadius: "8px",
+          color: "#fff",
+          padding: "8px 18px",
+          fontSize: "0.85rem",
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          gap: "8px",
+          opacity: showBack ? 1 : 0,
+          transform: showBack ? "translateX(0)" : "translateX(-10px)",
+          transition: "opacity 0.3s, transform 0.3s",
+          zIndex: 1001,
+          pointerEvents: showBack ? "all" : "none",
+        }}
+      >
+        ← Back
+      </button>
+
+      {/* Movie title overlay */}
+      <div
+        style={{
+          position: "fixed",
+          top: "20px",
+          left: "50%",
+          transform: "translateX(-50%)",
+          color: "#fff",
+          fontFamily: "'Bebas Neue', Impact, sans-serif",
+          fontSize: "1.1rem",
+          letterSpacing: "0.1em",
+          opacity: showBack ? 0.8 : 0,
+          transition: "opacity 0.3s",
+          background: "rgba(0,0,0,0.4)",
+          padding: "6px 16px",
+          borderRadius: "6px",
+          zIndex: 1001,
+        }}
+      >
+        {movie.title}
+      </div>
+    </div>
+  );
+}
+
+// ─── Main App ─────────────────────────────────────────────────────────────────
+export default function NetflixApp() {
+  const [hoveredMovie, setHoveredMovie] = useState(null);
+  const [playingMovie, setPlayingMovie] = useState(null);
+  const hoverTimer = useRef(null);
+
+  const handleHover = useCallback((movie) => {
+    clearTimeout(hoverTimer.current);
+    hoverTimer.current = setTimeout(() => setHoveredMovie(movie), 200);
+  }, []);
+
+  const handleLeave = useCallback(() => {
+    clearTimeout(hoverTimer.current);
+    hoverTimer.current = setTimeout(() => setHoveredMovie(null), 300);
+  }, []);
+
+  const handlePlay = useCallback((movie) => {
+    setHoveredMovie(null);
+    setPlayingMovie(movie);
+  }, []);
+
+  const handleBack = useCallback(() => {
+    setPlayingMovie(null);
+  }, []);
+
+  if (playingMovie) {
+    return <PlayerPage movie={playingMovie} onBack={handleBack} />;
+  }
+
+  return (
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;600;700&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0a0a0a; color: #fff; font-family: 'Outfit', sans-serif; }
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(8px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes bgFadeIn {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
+        @keyframes logoFlicker {
+          0%,100% { opacity: 1; }
+          50%     { opacity: 0.85; }
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #111; }
+        ::-webkit-scrollbar-thumb { background: #e50914; border-radius: 3px; }
+
+        .movie-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 18px;
+        }
+        @media (max-width: 900px) {
+          .movie-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        }
+        @media (max-width: 540px) {
+          .movie-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        }
+      `}</style>
+
+      {/* Background video preview */}
+      <BackgroundPreview movie={hoveredMovie} />
+
+      {/* Fixed dark base */}
+      <div style={{ position: "fixed", inset: 0, background: "#090909", zIndex: -1 }} />
+
+      <div style={{ position: "relative", zIndex: 1, minHeight: "100vh" }}>
+        {/* ── Navbar ── */}
+        <nav
+          style={{
+            position: "sticky",
+            top: 0,
+            zIndex: 100,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "0 32px",
+            height: "64px",
+            background: "linear-gradient(to bottom, rgba(0,0,0,0.95), transparent)",
+            backdropFilter: "blur(2px)",
+          }}
+        >
+          <span
+            style={{
+              fontFamily: "'Bebas Neue', Impact, sans-serif",
+              fontSize: "2rem",
+              color: "#e50914",
+              letterSpacing: "0.06em",
+              animation: "logoFlicker 4s ease-in-out infinite",
+              userSelect: "none",
+            }}
+          >
+            NETFLUX
+          </span>
+          <div style={{ display: "flex", gap: "24px", alignItems: "center" }}>
+            {["Home", "Series", "Films", "My List"].map((item) => (
+              <span
+                key={item}
+                style={{
+                  color: item === "Home" ? "#fff" : "#aaa",
+                  fontSize: "0.85rem",
+                  cursor: "pointer",
+                  fontWeight: item === "Home" ? 600 : 400,
+                  transition: "color 0.2s",
+                }}
+                onMouseEnter={(e) => (e.target.style.color = "#fff")}
+                onMouseLeave={(e) => (e.target.style.color = item === "Home" ? "#fff" : "#aaa")}
+              >
+                {item}
+              </span>
+            ))}
+          </div>
+          <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
+            <span style={{ fontSize: "1.1rem", cursor: "pointer" }}>🔔</span>
+            <div
+              style={{
+                width: "32px",
+                height: "32px",
+                borderRadius: "6px",
+                background: "linear-gradient(135deg, #e50914, #b20710)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "0.8rem",
+                fontWeight: 700,
+                cursor: "pointer",
+              }}
+            >
+              U
+            </div>
+          </div>
+        </nav>
+
+        {/* ── Hero Banner ── */}
+        <div
+          style={{
+            padding: "40px 32px 32px",
+            maxWidth: "480px",
+          }}
+        >
+          {hoveredMovie ? (
+            <div style={{ animation: "fadeUp 0.3s ease" }}>
+              <div
+                style={{
+                  fontSize: "0.75rem",
+                  color: "#e50914",
+                  letterSpacing: "0.15em",
+                  textTransform: "uppercase",
+                  fontWeight: 600,
+                  marginBottom: "8px",
+                }}
+              >
+                Now Previewing
+              </div>
+              <h1
+                style={{
+                  fontFamily: "'Bebas Neue', Impact, sans-serif",
+                  fontSize: "clamp(2rem, 5vw, 3.5rem)",
+                  lineHeight: 1,
+                  marginBottom: "12px",
+                  color: "#fff",
+                  letterSpacing: "0.02em",
+                }}
+              >
+                {hoveredMovie.title}
+              </h1>
+              <p style={{ color: "#ccc", fontSize: "0.88rem", lineHeight: 1.6, marginBottom: "20px" }}>
+                {hoveredMovie.desc}
+              </p>
+              <button
+                onClick={() => handlePlay(hoveredMovie)}
+                style={{
+                  background: "#fff",
+                  color: "#000",
+                  border: "none",
+                  borderRadius: "6px",
+                  padding: "10px 28px",
+                  fontSize: "0.9rem",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  transition: "background 0.2s",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "#e5e5e5")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "#fff")}
+              >
+                ▶ Play Now
+              </button>
+            </div>
+          ) : (
+            <div>
+              <div
+                style={{
+                  fontSize: "0.75rem",
+                  color: "#e50914",
+                  letterSpacing: "0.15em",
+                  textTransform: "uppercase",
+                  fontWeight: 600,
+                  marginBottom: "8px",
+                }}
+              >
+                Trending Now
+              </div>
+              <h1
+                style={{
+                  fontFamily: "'Bebas Neue', Impact, sans-serif",
+                  fontSize: "clamp(2.5rem, 5vw, 4rem)",
+                  lineHeight: 1,
+                  color: "#fff",
+                  letterSpacing: "0.02em",
+                }}
+              >
+                Unlimited Movies
+                <br />
+                <span style={{ color: "#e50914" }}>& More.</span>
+              </h1>
+              <p style={{ color: "#888", fontSize: "0.85rem", marginTop: "10px" }}>
+                Hover a movie to preview · Click to watch
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* ── Movie Grid ── */}
+        <div style={{ padding: "0 32px 60px" }}>
+          <h2
+            style={{
+              fontFamily: "'Outfit', sans-serif",
+              fontSize: "0.8rem",
+              fontWeight: 600,
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+              color: "#888",
+              marginBottom: "18px",
+            }}
+          >
+            Featured Titles
+          </h2>
+          <div className="movie-grid">
+            {MOVIES.map((movie) => (
+              <MovieCard
+                key={movie.id}
+                movie={movie}
+                onHover={handleHover}
+                onLeave={handleLeave}
+                onPlay={handlePlay}
+                isHovered={hoveredMovie?.id === movie.id}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* ── Footer ── */}
+        <div
+          style={{
+            borderTop: "1px solid #222",
+            padding: "24px 32px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: "12px",
+          }}
+        >
+          <span
+            style={{
+              fontFamily: "'Bebas Neue', sans-serif",
+              color: "#e50914",
+              fontSize: "1.2rem",
+              letterSpacing: "0.06em",
+            }}
+          >
+            NETFLUX
+          </span>
+          <span style={{ color: "#555", fontSize: "0.75rem" }}>
+            © 2024 Netflux Prototype · Interview Task
+          </span>
+        </div>
+      </div>
+    </>
+  );
+}
